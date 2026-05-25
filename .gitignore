@@ -222,4 +222,4 @@ docs/references/*.pdf
 *.pdf
 
 
-.venv/
+.venv/.DS_Store
