@@ -25,12 +25,15 @@ from .spectra import BandSpectrum
 def run_from_config(config: dict[str, Any], config_path: str | Path) -> list[Path]:
     """Run the configured Stage 3 calculation and return written paths."""
 
-    mode = config["mode"]
-    if mode == "curve":
-        return run_curve(config, config_path)
-    if mode == "significance":
-        return run_significance(config, config_path)
-    raise ConfigError("mode must be either 'curve' or 'significance'.")
+    try:
+        mode = config["mode"]
+        if mode == "curve":
+            return run_curve(config, config_path)
+        if mode == "significance":
+            return run_significance(config, config_path)
+        raise ConfigError("mode must be either 'curve' or 'significance'.")
+    except ValueError as exc:
+        raise ConfigError(str(exc)) from exc
 
 
 def run_curve(config: dict[str, Any], config_path: str | Path) -> list[Path]:
@@ -183,6 +186,11 @@ def _detector_from_config(config: dict[str, Any], config_path: Path) -> Detector
         response_path = config_path.parent / response_path
 
     try:
+        if not response_path.exists():
+            raise ConfigError(
+                f"response CSV file was not found: {response_path}. "
+                "Create the file or fix detector.response.path in the YAML."
+            )
         response = DetectorResponse.from_csv(
             response_path,
             quantity=response_cfg["quantity"],
@@ -201,8 +209,10 @@ def _detector_from_config(config: dict[str, Any], config_path: Path) -> Detector
             mask_open_fraction=float(mask_cfg["open_fraction"]),
             response_includes_mask=bool(mask_cfg.get("response_includes_mask", False)),
         )
-    except (OSError, ValueError) as exc:
-        raise ConfigError(str(exc)) from exc
+    except OSError as exc:
+        raise ConfigError(f"could not read response CSV file {response_path}: {exc}") from exc
+    except ValueError as exc:
+        raise ConfigError(f"response CSV validation failed for {response_path}: {exc}") from exc
 
 
 def _grid_values(grid_cfg: dict[str, Any]) -> np.ndarray:

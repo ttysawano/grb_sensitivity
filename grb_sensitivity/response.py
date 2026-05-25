@@ -40,9 +40,13 @@ class DetectorResponse:
         if len(energy) < 2:
             raise ValueError("response CSV must contain at least two rows.")
         if np.any(energy <= 0):
-            raise ValueError("response energy values must be positive for log-log interpolation.")
+            raise ValueError(
+                "the response CSV contains zero or negative energy values, but log-log interpolation requires positive energy_keV > 0."
+            )
         if np.any(values <= 0):
-            raise ValueError("response values must be positive for log-log interpolation.")
+            raise ValueError(
+                "the response CSV contains zero or negative response values, but log-log interpolation requires positive response_value > 0."
+            )
 
         order = np.argsort(energy)
         sorted_energy = energy[order]

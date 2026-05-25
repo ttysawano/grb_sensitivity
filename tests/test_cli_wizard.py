@@ -77,6 +77,7 @@ def test_generated_yaml_validates(monkeypatch, tmp_path):
     feed_inputs(monkeypatch, ["1"])
 
     path = prompt_create_config("grb_sensitivity.yaml")
+    Path("detector_response.csv").write_text("energy_keV,efficiency\n1,0.5\n10,0.6\n", encoding="utf-8")
     result = load_and_validate(path)
 
     assert result.config["detector"]["response"]["quantity"] == "efficiency"

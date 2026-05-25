@@ -23,6 +23,8 @@ def test_user_help_contains_quick_start():
 
     assert completed.returncode == 0
     assert "Quick start" in completed.stdout
+    assert "Response CSV format" in completed.stdout
+    assert "Common warnings" in completed.stdout
 
 
 def test_developer_help_contains_band_reference():
@@ -30,6 +32,8 @@ def test_developer_help_contains_band_reference():
 
     assert completed.returncode == 0
     assert "Band (2003)" in completed.stdout
+    assert "Moretti et al. (2009) CXB" in completed.stdout
+    assert "Adding or modifying output columns" in completed.stdout
 
 
 def test_help_subcommands_work():
@@ -38,8 +42,10 @@ def test_help_subcommands_work():
 
     assert user.returncode == 0
     assert "Quick start" in user.stdout
+    assert "Run curve mode" in user.stdout
     assert developer.returncode == 0
     assert "Package layout" in developer.stdout
+    assert "Where equations live" in developer.stdout
 
 
 def test_template_prints_yaml_like_template():

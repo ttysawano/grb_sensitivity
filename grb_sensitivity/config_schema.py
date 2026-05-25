@@ -140,7 +140,7 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
 
     mode = require_path("mode")
     if mode is not None and mode not in ALLOWED_MODES:
-        errors.append("mode must be either 'curve' or 'significance'.")
+        errors.append("mode must be either 'curve' or 'significance'. Choose one of those two values.")
 
     require_path("version")
     spectrum_model = require_path("spectrum.model")
@@ -150,9 +150,9 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
     alpha = _as_float(require_path("spectrum.alpha"), "spectrum.alpha", errors)
     beta = _as_float(require_path("spectrum.beta"), "spectrum.beta", errors)
     if alpha is not None and alpha <= -2.0:
-        errors.append("spectrum.alpha must be greater than -2 for Epeak to define E_0.")
+        errors.append("spectrum.alpha must be greater than -2. Increase alpha so E_0 = Epeak / (alpha + 2) is positive.")
     if alpha is not None and beta is not None and alpha <= beta:
-        errors.append("spectrum.alpha must be greater than spectrum.beta.")
+        errors.append("spectrum.alpha must be greater than spectrum.beta. For example, alpha=-1 and beta=-2.5 is valid.")
 
     response_path = require_path("detector.response.path")
     response_quantity = require_path("detector.response.quantity")
@@ -162,7 +162,10 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
     if response_quantity is None:
         errors.append("response.quantity is required. Choose either 'efficiency' or 'effective_area_cm2'.")
     elif response_quantity not in ALLOWED_RESPONSE_QUANTITIES:
-        errors.append("response.quantity must be either 'efficiency' or 'effective_area_cm2'.")
+        errors.append(
+            "response.quantity must be either 'efficiency' or 'effective_area_cm2'. "
+            "Use 'efficiency' for dimensionless CSV values, or 'effective_area_cm2' for area in cm^2."
+        )
 
     E_l, E_h = _band(require_path("flux.reference_band_keV"), "flux.reference_band_keV", errors)
     if E_l is not None and E_l <= 0:
@@ -174,7 +177,10 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
     if E_1 is not None and E_1 <= 0:
         errors.append("detector.trigger.energy_band_keV lower energy must be positive.")
     if E_1 is not None and E_2 is not None and E_2 <= E_1:
-        errors.append("detector.trigger.energy_band_keV upper energy must be greater than the lower energy.")
+        errors.append(
+            "detector.trigger.energy_band_keV upper energy E_2 must be greater than lower energy E_1. "
+            "Use a band like [10.0, 1000.0]."
+        )
 
     sigma_0 = _as_float(require_path("detector.trigger.threshold_sigma"), "detector.trigger.threshold_sigma", errors)
     if sigma_0 is not None and sigma_0 <= 0:
@@ -201,7 +207,10 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
     if cxb_enabled:
         Omega = _as_float(require_path("detector.aperture_solid_angle_sr"), "detector.aperture_solid_angle_sr", errors)
         if Omega is not None and Omega <= 0:
-            errors.append("detector.aperture_solid_angle_sr must be positive when CXB background is enabled.")
+            errors.append(
+                "detector.aperture_solid_angle_sr must be positive when CXB background is enabled. "
+                "Set it to the detector aperture solid angle in sr, or disable background.cxb.enabled."
+            )
 
     epeak = config.get("grb", {}).get("epeak_keV")
     if epeak is not None:
@@ -209,12 +218,30 @@ def validate_config(config: dict[str, Any], *, config_path: Path | None = None) 
         if epeak_value is not None and epeak_value <= 0:
             errors.append("grb.epeak_keV must be positive.")
 
-    if response_path and config_path is not None:
+    if response_path and config_path is not None and not errors:
         csv_path = Path(response_path)
         if not csv_path.is_absolute():
             csv_path = config_path.parent / csv_path
         if not csv_path.exists():
-            warnings.append(f"response CSV was not found at {csv_path}; Stage 1 validation did not read response data.")
+            errors.append(
+                f"response CSV file was not found: {csv_path}. "
+                "Create the file, fix detector.response.path, or make the path relative to the YAML file."
+            )
+        else:
+            try:
+                from .response import DetectorResponse
+
+                DetectorResponse.from_csv(
+                    csv_path,
+                    quantity=response_quantity,
+                    csv_has_header=bool(config["detector"]["response"].get("csv_has_header", True)),
+                    energy_column=config["detector"]["response"].get("energy_column", 1),
+                    value_column=config["detector"]["response"].get("value_column", 2),
+                    interpolation=config["detector"]["response"].get("interpolation", "loglog"),
+                    extrapolation=config["detector"]["response"].get("extrapolation", "powerlaw_with_warning"),
+                )
+            except ValueError as exc:
+                errors.append(f"response CSV validation failed for {csv_path}: {exc}")
 
     if errors:
         raise ConfigError("\n".join(errors))

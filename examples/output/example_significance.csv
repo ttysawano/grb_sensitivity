@@ -1,2 +1,2 @@
 grb_name,alpha,beta,epeak_keV,peak_flux_ph_cm2_s,peak_flux_band_min_keV,peak_flux_band_max_keV,source_counts,background_counts_total,background_counts_cxb,background_counts_internal,significance_sigma,detected
-example_grb,-1.0,-2.5,500.0,10.0,1.0,1000.0,338.50138933228226,163.78333357852512,163.78333357852512,0.0,26.449995492917292,True
+example_grb,-1.0,-2.5,500.0,4.0,1.0,1000.0,135.4005557329129,163.78333357852512,163.78333357852512,0.0,10.579998197166915,True

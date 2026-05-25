@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from grb_sensitivity.background import DEG2_PER_SR, moretti2009_energy_flux_per_deg2, moretti2009_photon_intensity
+from grb_sensitivity.background import (
+    DEG2_PER_SR,
+    cxb_effective_band,
+    moretti2009_energy_flux_per_deg2,
+    moretti2009_photon_intensity,
+)
 
 
 def test_moretti_2009_2_10_kev_energy_flux_per_square_degree():
@@ -23,3 +28,8 @@ def test_moretti_model_returns_positive_values():
     energies = np.array([2.0, 10.0, 200.0])
 
     assert np.all(moretti2009_photon_intensity(energies) > 0)
+
+
+def test_moretti_above_range_warning_explains_extrapolation():
+    with pytest.warns(RuntimeWarning, match="above 200 keV.*extrapolation"):
+        assert cxb_effective_band(10.0, 1000.0) == (10.0, 1000.0)
