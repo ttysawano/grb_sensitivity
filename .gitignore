@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local reference papers; keep them out of GitHub
+docs/references/*.pdf
+*.pdf
