@@ -23,7 +23,7 @@ grb:
   name: example_grb
   epeak_keV: 500.0
   peak_flux:
-    value: 1.0
+    value: 10.0
     unit: ph_cm2_s
     band_keV: [1.0, 1000.0]
 
@@ -70,5 +70,5 @@ numerics:
     spacing: log
 
 output:
-  csv: significance.csv
+  csv: output/example_significance.csv
   plot: null

@@ -161,6 +161,10 @@ def threshold_peak_photon_flux(
     sigma_0: float = 8.0,
     R_int_cps: float = 0.0,
     cxb_enabled: bool = True,
+    cxb_model: str = "moretti2009",
+    below_valid_range_policy: str = "truncate_with_warning",
+    above_valid_range_policy: str = "evaluate_with_warning",
+    precomputed_background: BackgroundCounts | None = None,
     n_grid: int = 4096,
 ) -> ThresholdResult:
     """Compute Band (2003)-style threshold peak photon flux ``F_T``.
@@ -189,14 +193,20 @@ def threshold_peak_photon_flux(
     if source_counts_per_N0 <= 0:
         raise ValueError("source_counts_per_N0 must be positive to compute a threshold flux.")
 
-    background = background_counts_total(
-        detector,
-        (E_1, E_2),
-        Delta_t,
-        R_int_cps=R_int_cps,
-        cxb_enabled=cxb_enabled,
-        n_grid=n_grid,
-    )
+    if precomputed_background is None:
+        background = background_counts_total(
+            detector,
+            (E_1, E_2),
+            Delta_t,
+            R_int_cps=R_int_cps,
+            cxb_enabled=cxb_enabled,
+            cxb_model=cxb_model,
+            below_valid_range_policy=below_valid_range_policy,
+            above_valid_range_policy=above_valid_range_policy,
+            n_grid=n_grid,
+        )
+    else:
+        background = precomputed_background
     background_counts_total_value = background.total
     if background_counts_total_value <= 0:
         raise ValueError("background_counts_total must be positive to compute a threshold flux.")
@@ -240,6 +250,9 @@ def significance_for_peak_flux(
     Delta_t: float = 1.0,
     R_int_cps: float = 0.0,
     cxb_enabled: bool = True,
+    cxb_model: str = "moretti2009",
+    below_valid_range_policy: str = "truncate_with_warning",
+    above_valid_range_policy: str = "evaluate_with_warning",
     n_grid: int = 4096,
 ) -> float:
     """Compute Gaussian significance for a GRB with known peak photon flux."""
@@ -253,6 +266,9 @@ def significance_for_peak_flux(
         Delta_t,
         R_int_cps=R_int_cps,
         cxb_enabled=cxb_enabled,
+        cxb_model=cxb_model,
+        below_valid_range_policy=below_valid_range_policy,
+        above_valid_range_policy=above_valid_range_policy,
         n_grid=n_grid,
     ).total
     return significance_sigma(S, B)

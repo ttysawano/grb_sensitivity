@@ -71,5 +71,5 @@ numerics:
     spacing: log
 
 output:
-  csv: sensitivity_curve.csv
-  plot: sensitivity_curve.png
+  csv: output/example_curve.csv
+  plot: output/example_curve.png

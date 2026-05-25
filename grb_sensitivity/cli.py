@@ -105,7 +105,12 @@ def _cmd_run(config_path: Path, *, dry_run: bool) -> int:
     for warning in result.warnings:
         print(f"Warning: {warning}")
     if not dry_run:
-        print("Stage 1 mock run only. Re-run with --dry-run to see the configuration summary.")
+        from .output import run_from_config
+
+        written = run_from_config(config, config_path)
+        print("Calculation complete.")
+        for path in written:
+            print(f"Wrote: {path}")
         return 0
     print(_dry_run_summary(config_path, config))
     return 0

@@ -79,7 +79,8 @@ Band (2003) notation to Python names
 
 Unit conventions
   Energies are keV. Areas are cm^2. Photon flux is ph cm^-2 s^-1. CXB
-  intensity is ph cm^-2 s^-1 sr^-1 keV^-1 after conversion from deg^-2.
+  intensity is ph cm^-2 s^-1 sr^-1 keV^-1. Per-square-degree checks divide by
+  DEG2_PER_SR = (180/pi)^2.
 
 Where to find the core calculation
   Stage 1 contains placeholders only. The real calculation belongs in
