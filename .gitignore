@@ -220,3 +220,6 @@ __marimo__/
 # Local reference papers; keep them out of GitHub
 docs/references/*.pdf
 *.pdf
+
+
+.venv/
