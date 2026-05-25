@@ -146,16 +146,28 @@ Gamma2  = 2.88
 E_B     = 29.0 keV
 ```
 
-The formula in Moretti et al. is expressed per square degree. Internally, this tool shall use steradian units:
+For this implementation, the normalization
+
+```text
+C = 0.109
+```
+
+shall be treated as a per-steradian normalization. The built-in
+`moretti2009` model shall return photon intensity in:
 
 ```text
 ph cm^-2 s^-1 sr^-1 keV^-1
 ```
 
-Therefore, the conversion shall be:
+Do not multiply the model by `(180/pi)^2` for internal detector background
+calculations. Detector background calculations already use aperture solid angle
+`Omega` in steradians.
+
+For reporting or checking flux per square degree, convert from per steradian to
+per square degree by dividing by:
 
 ```text
-I_sr(E) = I_deg2(E) * (180/pi)^2
+DEG2_PER_SR = (180/pi)^2
 ```
 
 because:
@@ -191,14 +203,21 @@ The implementation shall include tests or developer utilities to verify that the
 
 At minimum, the following consistency check shall be implemented:
 
-1. Integrate the `moretti2009` model over 2-10 keV.
-2. Convert from photon flux to energy flux using:
+1. Integrate `E * N_B(E)` from the `moretti2009` model over 2-10 keV, where
+   `N_B(E)` is in `ph cm^-2 s^-1 sr^-1 keV^-1`.
+2. Convert from keV energy flux to erg energy flux using:
 
 ```text
 1 keV = 1.602176634e-9 erg
 ```
 
-3. Verify that the result is close to:
+3. Convert from per steradian to per square degree by dividing by:
+
+```text
+DEG2_PER_SR = (180/pi)^2
+```
+
+4. Verify that the result is close to:
 
 ```text
 2.21e-11 erg cm^-2 s^-1 deg^-2
@@ -1097,7 +1116,9 @@ Requirements:
 2. Units shall be written in comments near important variables.
 3. `counts`, `rate`, `photon_flux`, and `energy_flux` shall be clearly distinguished.
 4. The Band (2003) notation shall be referenced in comments where helpful.
-5. The Moretti et al. (2009) CXB model shall include a comment explaining the deg^-2 to sr^-1 conversion.
+5. The Moretti et al. (2009) CXB model shall include a comment explaining that
+   the built-in model returns per-steradian intensity and that per-square-degree
+   checks divide by `DEG2_PER_SR = (180/pi)^2`.
 6. Approximations shall be explicitly noted.
 7. The code should prefer clarity over overly compact implementation.
 
@@ -1113,9 +1134,9 @@ Example comment style:
 Another example:
 
 ```python
-# Moretti et al. (2009) Eq. (4) is written per square degree.
-# The detector background calculation uses Omega in steradians,
-# so we convert the CXB intensity from deg^-2 to sr^-1.
+# The built-in Moretti et al. (2009) model returns intensity per steradian.
+# Detector background uses Omega in steradians directly. For a per-square-degree
+# reporting check, divide the integrated flux by DEG2_PER_SR = (180/pi)^2.
 ```
 
 ---

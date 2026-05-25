@@ -113,7 +113,8 @@ After Stage 2, the human user should check:
 - `E_0`, `E_b`, and `Epeak` are defined consistently.
 - The threshold flux calculation corresponds to the Band (2003) formulation.
 - The code comments help connect the paper equation to the implementation.
-- The Moretti et al. (2009) CXB formula and deg^-2 to sr^-1 conversion are visibly correct.
+- The Moretti et al. (2009) CXB formula, per-steradian convention, and
+  sr^-1 to deg^-2 reporting/check conversion are visibly correct.
 
 Codex should provide a short markdown note:
 
@@ -379,10 +380,19 @@ Gamma2 = 2.88
 E_B = 29.0 keV
 ```
 
-The model as written is per square degree. Convert internally to per steradian:
+Treat `C = 0.109` as a per-steradian normalization. The built-in
+`moretti2009` model shall return photon intensity in:
 
 ```text
-I_sr(E) = I_deg2(E) * (180/pi)^2
+ph cm^-2 s^-1 sr^-1 keV^-1
+```
+
+Do not multiply the model by `(180/pi)^2` for internal detector background
+calculations. For reporting or checking flux per square degree, convert from
+per steradian to per square degree by dividing by:
+
+```text
+DEG2_PER_SR = (180/pi)^2
 ```
 
 Implement policies:
@@ -452,11 +462,11 @@ Required tests:
 4. Energy flux integration uses the correct keV-to-erg conversion.
 5. Response interpolation reproduces tabulated points.
 6. Response interpolation rejects zero and negative values.
-7. Moretti 2009 2-10 keV energy flux is close to:
+7. Moretti 2009 2-10 keV energy flux is close to the reported per-square-degree value after integrating `E * N_B(E)`, multiplying by `KEV_TO_ERG`, and dividing by `DEG2_PER_SR = (180/pi)^2`:
    ```text
    2.21e-11 erg cm^-2 s^-1 deg^-2
    ```
-8. Moretti model converts deg^-2 to sr^-1 correctly.
+8. Moretti model uses sr^-1 internally and converts sr^-1 to deg^-2 correctly for reporting/checks.
 9. Internal background counts equal `R_int_cps * Delta_t`.
 10. Threshold flux decreases when detector area is increased, all else equal.
 11. Significance increases when input GRB peak flux is increased.
@@ -474,7 +484,7 @@ It shall include:
 - Band function equation and source-code location.
 - `E_0` and `E_b` definitions and source-code location.
 - Threshold flux equation and source-code location.
-- Moretti 2009 CXB equation and source-code location.
+- Moretti 2009 CXB equation, per-steradian convention, reporting/check conversion, and source-code location.
 - Unit conversion notes.
 - A checklist for the human user to visually compare the code with the papers.
 
